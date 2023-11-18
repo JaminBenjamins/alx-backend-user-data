@@ -11,14 +11,14 @@ from uuid import uuid4
 from typing import TypeVar
 
 
-def hash_password(password: str) -> str:
+def _hash_password(password: str) -> str:
     """
     Defining hash password
     """
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
 
-def generate_uuid() -> str:
+def _generate_uuid() -> str:
     """
     Generating a unique identifier
     """
@@ -40,7 +40,7 @@ class Auth:
             self._db.find_user_by(email=email)
             raise ValueError(f"User {email} already exists")
         except NoResultFound:
-            return self._db.add_user(email, hash_password(password))
+            return self._db.add_user(email, _hash_password(password))
 
         def valid_login(self, email: str, password: str) -> bool:
             """
@@ -58,7 +58,7 @@ class Auth:
             """
             try:
                 user = self._db.find_user_by(email=email)
-                sess_id = generate_uuid()
+                sess_id = _generate_uuid()
                 self._db.update_user(user.id, session_id=sess_id)
                 return sess_id
             except NoResultFound:
@@ -73,7 +73,7 @@ class Auth:
             try:
                 user = self._db.find_user_by(session_id=session_id)
                 return user.email
-            except NoResultFounda:
+            except NoResultFound:
                 return
 
         def destroy_session(self. user_id: int) -> None:
@@ -92,7 +92,7 @@ class Auth:
             """
             try:
                 user = self._db.find_user_by(email=email)
-                reset_token = generate_uuid()
+                reset_token = _generate_uuid()
                 self._db.update_user(user.id, reset_token=reset_token)
                 return reset_token
             except NoResultFound:
@@ -105,7 +105,7 @@ class Auth:
             try:
                 user = self._db.find_user_by(reset_token=reset_token)
                 self._db.update_user(user.id,
-                                     hashed_password=hash_password(password),
+                                     hashed_password=_hash_password(password),
                                      reset_token=None)
             except NoResultFound:
                 raise ValueError
